@@ -439,8 +439,16 @@ export const PlanetFactory = {
 
         let texture = null;
         const n = moonSpec.name.toLowerCase();
+        
+        // Use specific textures for each moon
         if (n === 'io') texture = TextureFactory.generateIoTexture();
         else if (n === 'europa') texture = TextureFactory.generateEuropaTexture();
+        else if (n === 'ganymede') texture = TextureFactory.generateGanymedeTexture();
+        else if (n === 'callisto') texture = TextureFactory.generateCallistoTexture();
+        else if (n === 'phobos') texture = TextureFactory.generatePhobosTexture();
+        else if (n === 'deimos') texture = TextureFactory.generateDeimosTexture();
+        else if (n === 'titan') texture = TextureFactory.generateTitanTexture();
+        else if (n === 'rhea') texture = TextureFactory.generateRheaTexture();
         else texture = TextureFactory.generateMoonTexture();
 
         const material = new THREE.MeshStandardMaterial({
@@ -631,11 +639,7 @@ export const PlanetFactory = {
             case 'callisto':
             case 'titan':
             case 'rhea':
-                planetGroup = this.createGenericPlanet(spec);
-                if (planetName === 'titan') {
-                    const atmo = this.createAtmosphere(spec.radius, spec.atmosphereColor || 0xffaa00, 0.4);
-                    planetGroup.add(atmo);
-                }
+                planetGroup = this.createGenericPlanet(spec, planetName);
                 break;
 
             case 'iss':
@@ -735,14 +739,41 @@ export const PlanetFactory = {
         return beltGroup;
     },
 
-    createGenericPlanet(spec) {
+    createGenericPlanet(spec, planetName) {
         const group = new THREE.Group();
         const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        
+        // Get the appropriate texture based on planet/moon name
+        let texture = null;
+        const name = (planetName || spec.info?.title || '').toLowerCase();
+        
+        if (name.includes('phobos')) {
+            texture = TextureFactory.generatePhobosTexture();
+        } else if (name.includes('deimos')) {
+            texture = TextureFactory.generateDeimosTexture();
+        } else if (name.includes('io')) {
+            texture = TextureFactory.generateIoTexture();
+        } else if (name.includes('europa')) {
+            texture = TextureFactory.generateEuropaTexture();
+        } else if (name.includes('ganymede')) {
+            texture = TextureFactory.generateGanymedeTexture();
+        } else if (name.includes('callisto')) {
+            texture = TextureFactory.generateCallistoTexture();
+        } else if (name.includes('titan')) {
+            texture = TextureFactory.generateTitanTexture();
+        } else if (name.includes('rhea')) {
+            texture = TextureFactory.generateRheaTexture();
+        } else if (name.includes('moon')) {
+            texture = TextureFactory.generateMoonTexture();
+        }
+        
         const material = new THREE.MeshStandardMaterial({
-            color: spec.color || 0xcccccc,
+            map: texture,
+            color: texture ? 0xffffff : (spec.color || 0xcccccc),
             roughness: 0.8,
             metalness: 0.2
         });
+        
         const mesh = new THREE.Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;

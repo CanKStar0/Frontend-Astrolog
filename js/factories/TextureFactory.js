@@ -665,6 +665,344 @@ export const TextureFactory = {
         }
 
         return new THREE.CanvasTexture(canvas);
+    },
+
+    // Phobos - Mars' larger moon (dark, cratered, elongated)
+    generatePhobosTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+
+        // Dark gray-brown base
+        ctx.fillStyle = '#554433';
+        ctx.fillRect(0, 0, 512, 256);
+
+        // Heavy cratering (Phobos is heavily cratered)
+        for (let i = 0; i < 200; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            const r = Math.random() * 15 + 2;
+            const brightness = Math.random() * 30 - 15;
+
+            ctx.fillStyle = `rgba(${60 + brightness}, ${50 + brightness}, ${40 + brightness}, 0.6)`;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Stickney Crater (large)
+            if (i === 0) {
+                ctx.fillStyle = 'rgba(30, 25, 20, 0.8)';
+                ctx.beginPath();
+                ctx.arc(256, 128, 40, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Grooves/striations
+        ctx.strokeStyle = 'rgba(40, 30, 25, 0.4)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 20; i++) {
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * 512, Math.random() * 256);
+            ctx.lineTo(Math.random() * 512, Math.random() * 256);
+            ctx.stroke();
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    },
+
+    // Deimos - Mars' smaller moon (smoother than Phobos)
+    generateDeimosTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+
+        // Slightly lighter than Phobos
+        ctx.fillStyle = '#665544';
+        ctx.fillRect(0, 0, 512, 256);
+
+        // Fewer, smaller craters (regolith-covered)
+        for (let i = 0; i < 80; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            const r = Math.random() * 8 + 1;
+            const brightness = Math.random() * 20 - 10;
+
+            ctx.fillStyle = `rgba(${80 + brightness}, ${70 + brightness}, ${55 + brightness}, 0.4)`;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Smooth regolith patches
+        for (let i = 0; i < 15; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, 40);
+            grad.addColorStop(0, 'rgba(120, 110, 90, 0.3)');
+            grad.addColorStop(1, 'rgba(120, 110, 90, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, 40, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    },
+
+    // Ganymede - Jupiter's largest moon (mixed ice and rock)
+    generateGanymedeTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // Mixed gray-brown base
+        const gradient = ctx.createLinearGradient(0, 0, 0, 512);
+        gradient.addColorStop(0, '#9090a0');
+        gradient.addColorStop(0.5, '#a0a0b0');
+        gradient.addColorStop(1, '#808090');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1024, 512);
+
+        // Dark regions (ancient cratered terrain)
+        for (let i = 0; i < 10; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            const size = Math.random() * 150 + 50;
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, size);
+            grad.addColorStop(0, 'rgba(70, 60, 50, 0.5)');
+            grad.addColorStop(1, 'rgba(70, 60, 50, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.ellipse(x, y, size, size * 0.7, Math.random() * Math.PI, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Light grooved terrain (tectonic)
+        ctx.strokeStyle = 'rgba(200, 200, 210, 0.3)';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 50; i++) {
+            ctx.beginPath();
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + (Math.random() - 0.5) * 200, y + (Math.random() - 0.5) * 100);
+            ctx.stroke();
+        }
+
+        // Craters
+        for (let i = 0; i < 100; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            const r = Math.random() * 15 + 3;
+            ctx.fillStyle = 'rgba(120, 120, 130, 0.5)';
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    },
+
+    // Callisto - Jupiter's outermost Galilean moon (heavily cratered ice)
+    generateCallistoTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // Dark icy surface
+        ctx.fillStyle = '#505060';
+        ctx.fillRect(0, 0, 1024, 512);
+
+        // Many bright impact craters (ancient surface)
+        for (let i = 0; i < 300; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            const r = Math.random() * 20 + 3;
+
+            // Dark crater
+            ctx.fillStyle = 'rgba(40, 40, 50, 0.5)';
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bright ejecta rays
+            if (r > 10) {
+                ctx.fillStyle = 'rgba(150, 150, 160, 0.3)';
+                ctx.beginPath();
+                ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Valhalla multi-ring structure
+        const vX = 700, vY = 250;
+        for (let r = 30; r < 150; r += 20) {
+            ctx.strokeStyle = `rgba(180, 180, 190, ${0.3 - r * 0.001})`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(vX, vY, r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    },
+
+    // Titan - Saturn's largest moon (thick orange atmosphere)
+    generateTitanTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // Orange hazy atmosphere
+        const gradient = ctx.createLinearGradient(0, 0, 0, 512);
+        gradient.addColorStop(0, '#cc9955');
+        gradient.addColorStop(0.3, '#ddaa66');
+        gradient.addColorStop(0.5, '#eebb77');
+        gradient.addColorStop(0.7, '#ddaa66');
+        gradient.addColorStop(1, '#cc9955');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1024, 512);
+
+        // Haze bands
+        for (let i = 0; i < 20; i++) {
+            const y = (i / 20) * 512;
+            ctx.fillStyle = i % 2 === 0 ? 'rgba(255, 200, 150, 0.2)' : 'rgba(200, 150, 100, 0.15)';
+            ctx.fillRect(0, y, 1024, 512 / 20);
+        }
+
+        // Methane lakes (dark patches - visible through haze)
+        for (let i = 0; i < 8; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 150 + 50; // Northern hemisphere
+            const size = Math.random() * 80 + 30;
+            ctx.fillStyle = 'rgba(80, 60, 40, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(x, y, size, size * 0.5, Math.random() * Math.PI, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Cloud wisps
+        for (let i = 0; i < 30; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, 100);
+            grad.addColorStop(0, 'rgba(255, 220, 180, 0.3)');
+            grad.addColorStop(1, 'rgba(255, 220, 180, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 100, 40, Math.random() * Math.PI, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    },
+
+    // Rhea - Saturn's second-largest moon (icy, cratered)
+    generateRheaTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+
+        // Bright icy surface
+        ctx.fillStyle = '#d0d0d8';
+        ctx.fillRect(0, 0, 512, 256);
+
+        // Wispy terrain (possible cryovolcanism)
+        for (let i = 0; i < 20; i++) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = Math.random() * 5 + 2;
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * 512, Math.random() * 256);
+            ctx.bezierCurveTo(
+                Math.random() * 512, Math.random() * 256,
+                Math.random() * 512, Math.random() * 256,
+                Math.random() * 512, Math.random() * 256
+            );
+            ctx.stroke();
+        }
+
+        // Craters
+        for (let i = 0; i < 150; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            const r = Math.random() * 12 + 2;
+            ctx.fillStyle = 'rgba(180, 180, 190, 0.5)';
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    },
+
+    // Sun surface texture (fallback for simple rendering)
+    generateSunTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 2048;
+        canvas.height = 1024;
+        const ctx = canvas.getContext('2d');
+
+        // Base gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 1024);
+        gradient.addColorStop(0, '#ffcc33');
+        gradient.addColorStop(0.5, '#ffaa00');
+        gradient.addColorStop(1, '#ff8800');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 2048, 1024);
+
+        // Granulation (convection cells)
+        for (let i = 0; i < 2000; i++) {
+            const x = Math.random() * 2048;
+            const y = Math.random() * 1024;
+            const size = Math.random() * 20 + 5;
+            const brightness = Math.random() * 40 - 20;
+
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, size);
+            grad.addColorStop(0, `rgba(${255 + brightness}, ${200 + brightness}, ${50 + brightness}, 0.3)`);
+            grad.addColorStop(1, `rgba(${220 + brightness}, ${150 + brightness}, ${0}, 0)`);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Sunspots
+        for (let i = 0; i < 8; i++) {
+            const x = Math.random() * 2048;
+            const y = 300 + Math.random() * 400; // Equatorial region
+            const size = Math.random() * 40 + 10;
+
+            // Umbra (dark center)
+            ctx.fillStyle = 'rgba(80, 40, 0, 0.7)';
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Penumbra (lighter outer)
+            ctx.fillStyle = 'rgba(150, 80, 20, 0.5)';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Solar flares/prominences
+        for (let i = 0; i < 5; i++) {
+            const x = Math.random() * 2048;
+            const y = Math.random() < 0.5 ? 50 : 974;
+            ctx.fillStyle = 'rgba(255, 100, 50, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(x, y, Math.random() * 100 + 30, Math.random() * 30 + 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        return new THREE.CanvasTexture(canvas);
     }
 };
 

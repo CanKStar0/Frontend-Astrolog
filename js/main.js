@@ -85,9 +85,17 @@ class CosmicApp {
 
         window.addEventListener('keydown', (e) => {
             if (e.code === 'KeyF') {
-                this.toggleFlightMode();
+                // If in comparison mode, exit it first then enter flight mode
+                if (this.isComparisonMode) {
+                    this.exitComparisonMode();
+                    // Small delay to let cleanup finish
+                    setTimeout(() => this.toggleFlightMode(), 100);
+                } else {
+                    this.toggleFlightMode();
+                }
             }
-            if (!this.isFlightMode) {
+            // Only allow keyboard navigation when not in flight or comparison mode
+            if (!this.isFlightMode && !this.isComparisonMode) {
                 this.handleKeyboardNavigation(e);
             }
         });
@@ -844,114 +852,258 @@ class CosmicApp {
 
     enterComparisonMode() {
         console.log("📏 Entering Comparison Mode");
+        
+        // Prevent entering if already in comparison mode
+        if (this.isComparisonMode) return;
+        
         this.isComparisonMode = true;
 
-        // Hide existing states
-        if (this.currentPlanet) this.currentPlanet.visible = false;
-        this.systemPlanets.forEach(p => p.visible = false);
-        this.orbitLines.forEach(l => l.visible = false);
-        if (this.spaceship) this.spaceship.visible = false;
+        // Exit flight mode if active - do it cleanly
+        if (this.isFlightMode) {
+            this.isFlightMode = false;
+            if (this.spaceship) {
+                this.sceneManager.scene.remove(this.spaceship);
+                this.spaceship = null;
+            }
+            this.flightController = null;
+            this.systemPlanets.forEach(p => this.sceneManager.scene.remove(p));
+            this.orbitLines.forEach(l => this.sceneManager.scene.remove(l));
+            this.systemPlanets = [];
+            this.orbitLines = [];
+        }
 
-        // UI Updates
-        // Hide info panel but KEEP navbar so user can exit
+        // Store current state for restoration
+        this.preCompareState = {
+            planetName: this.currentPlanetName,
+            cameraPos: this.sceneManager.camera.position.clone(),
+            orbitRadius: this.orbitRadius
+        };
+
+        // Remove current planet completely
+        if (this.currentPlanet) {
+            this.sceneManager.scene.remove(this.currentPlanet);
+            this.currentPlanet = null;
+        }
+
+        // Hide UI elements
         const infoPanel = document.getElementById('info-panel');
         if (infoPanel) infoPanel.classList.add('hidden');
         const hud = document.getElementById('flight-hud');
         if (hud) hud.classList.add('hidden');
 
-        // Create Comparison Group
-        this.comparisonGroup = new THREE.Group();
-        this.sceneManager.scene.add(this.comparisonGroup);
-
-        let currentX = 0;
-        const gap = 100; // Large gap to prevent Sun overlap (Sun radius is 50)
-
-        // Standard order
-        const planetsToCompare = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
-
-        planetsToCompare.forEach(key => {
-            const spec = planetSpecs[key];
-            if (!spec) return;
-
-            // Create a static instance for comparison (no orbit logic needed)
-            const planet = PlanetFactory.createPlanet(key);
-            if (!planet) return;
-
-            const radius = spec.radius;
-
-            // Position: Center needs to be at currentX + radius
-            planet.position.set(currentX + radius, 0, 0);
-
-            this.comparisonGroup.add(planet);
-
-            // Advance X
-            currentX += (radius * 2) + gap;
-        });
-
-        // Center the group visually
-        const totalWidth = currentX - gap;
-        this.comparisonGroup.position.x = -totalWidth / 2;
-
-        // Camera Logic
-        // We want to see the whole group. 
-        // FOV is 75. tan(FOV/2) = (Width/2) / Dist
-        // Dist = (Width/2) / tan(37.5)
-        const fov = 75 * (Math.PI / 180);
-        const dist = (totalWidth / 2) / Math.tan(fov / 2);
-
-        gsap.to(this.sceneManager.camera.position, {
-            x: 0,
-            y: dist * 0.2, // Slight angle
-            z: dist * 1.2, // Back a bit more
-            duration: 2.5,
-            ease: 'power3.inOut',
-            onUpdate: () => this.sceneManager.camera.lookAt(0, 0, 0)
-        });
-
-        // Add a simple exit instruction text
-        const exitTip = document.createElement('div');
-        exitTip.id = 'compare-exit-tip';
-        exitTip.style.position = 'absolute';
-        exitTip.style.bottom = '50px';
-        exitTip.style.width = '100%';
-        exitTip.style.textAlign = 'center';
-        exitTip.style.color = 'white';
-        exitTip.style.fontFamily = "'Orbitron', sans-serif";
-        exitTip.style.fontSize = '24px';
-        exitTip.style.textShadow = '0 0 10px rgba(0,255,255,0.8)';
-        exitTip.style.pointerEvents = 'none';
-        exitTip.innerHTML = "Comparison Mode<br><span style='font-size:16px; opacity:0.8'>Click 'Model' or select a planet to exit</span>";
-        document.body.appendChild(exitTip);
-    }
-
-    exitComparisonMode() {
-        console.log("🔙 Exiting Comparison Mode");
-        this.isComparisonMode = false;
-
-        // Cleanup
+        // Clean up any existing comparison group
         if (this.comparisonGroup) {
+            this.comparisonGroup.traverse((child) => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            });
             this.sceneManager.scene.remove(this.comparisonGroup);
             this.comparisonGroup = null;
         }
 
+        // Create fresh Comparison Group
+        this.comparisonGroup = new THREE.Group();
+        this.comparisonGroup.name = 'comparisonGroup';
+
+        // Comparison configuration - scale factors for visibility
+        const comparisonConfig = [
+            { key: 'sun', scale: 0.2, gap: 20 },
+            { key: 'mercury', scale: 1.5, gap: 10 },
+            { key: 'venus', scale: 1.2, gap: 12 },
+            { key: 'earth', scale: 1.2, gap: 12 },
+            { key: 'mars', scale: 1.4, gap: 10 },
+            { key: 'jupiter', scale: 0.5, gap: 20 },
+            { key: 'saturn', scale: 0.5, gap: 25 },
+            { key: 'uranus', scale: 0.7, gap: 15 },
+            { key: 'neptune', scale: 0.7, gap: 15 }
+        ];
+
+        let currentX = 0;
+        const comparisonPlanets = [];
+
+        comparisonConfig.forEach((config) => {
+            const spec = planetSpecs[config.key];
+            if (!spec) return;
+
+            // Create planet without moons for cleaner comparison
+            const planet = PlanetFactory.createPlanet(config.key);
+            if (!planet) return;
+
+            // Remove moons/satellites from comparison view
+            const childrenToRemove = [];
+            planet.traverse((child) => {
+                if (child.userData?.isMoon) {
+                    childrenToRemove.push(child);
+                }
+            });
+            childrenToRemove.forEach(child => {
+                if (child.parent) child.parent.remove(child);
+            });
+
+            const scaledRadius = spec.radius * config.scale;
+            planet.scale.setScalar(config.scale);
+            planet.position.set(currentX + scaledRadius, 0, 0);
+            planet.userData.comparisonPlanet = true;
+
+            this.comparisonGroup.add(planet);
+            comparisonPlanets.push(planet);
+
+            currentX += (scaledRadius * 2) + config.gap;
+        });
+
+        // Center the entire group
+        this.comparisonGroup.position.set(-currentX / 2, 0, 0);
+        this.sceneManager.scene.add(this.comparisonGroup);
+
+        // Calculate camera position for best view
+        const fov = 75 * (Math.PI / 180);
+        const distance = (currentX / 2) / Math.tan(fov / 2);
+
+        // Animate camera to overview position
+        gsap.killTweensOf(this.sceneManager.camera.position);
+        gsap.to(this.sceneManager.camera.position, {
+            x: 0,
+            y: distance * 0.1,
+            z: distance * 0.9,
+            duration: 2,
+            ease: 'power2.inOut',
+            onUpdate: () => {
+                this.sceneManager.camera.lookAt(0, 0, 0);
+            }
+        });
+
+        // Add exit instruction overlay
+        let exitTip = document.getElementById('compare-exit-tip');
+        if (exitTip) exitTip.remove();
+        
+        exitTip = document.createElement('div');
+        exitTip.id = 'compare-exit-tip';
+        exitTip.style.cssText = `
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            text-shadow: 0 0 15px rgba(0,200,255,0.9);
+            pointer-events: none;
+            z-index: 10000;
+            background: rgba(0,0,0,0.5);
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(0,200,255,0.3);
+        `;
+        exitTip.innerHTML = `
+            <div style="font-size: 24px; margin-bottom: 8px;">📊 Comparison Mode</div>
+            <div style="font-size: 14px; opacity: 0.8;">Press <b>F</b> for Flight Mode | <b>ESC</b> to exit | Scroll to zoom</div>
+        `;
+        document.body.appendChild(exitTip);
+
+        // Store comparison planets for interaction
+        this.comparisonPlanetsArray = comparisonPlanets;
+        
+        // Add comparison mode key handler
+        this.comparisonKeyHandler = (e) => {
+            if (e.code === 'Escape') {
+                this.exitComparisonMode();
+            }
+        };
+        window.addEventListener('keydown', this.comparisonKeyHandler);
+        
+        // Add scroll zoom for comparison mode
+        this.comparisonScrollHandler = (e) => {
+            if (!this.isComparisonMode) return;
+            const zoomSpeed = 0.05;
+            const direction = e.deltaY > 0 ? 1 : -1;
+            const camera = this.sceneManager.camera;
+            const minZ = 20;
+            const maxZ = 500;
+            camera.position.z = Math.max(minZ, Math.min(maxZ, camera.position.z + direction * camera.position.z * zoomSpeed));
+            camera.lookAt(0, 0, 0);
+        };
+        window.addEventListener('wheel', this.comparisonScrollHandler);
+
+        console.log("✅ Comparison mode ready with", comparisonPlanets.length, "planets");
+    }
+
+    exitComparisonMode() {
+        console.log("🔙 Exiting Comparison Mode");
+        
+        if (!this.isComparisonMode) return;
+        
+        this.isComparisonMode = false;
+
+        // Remove event listeners
+        if (this.comparisonKeyHandler) {
+            window.removeEventListener('keydown', this.comparisonKeyHandler);
+            this.comparisonKeyHandler = null;
+        }
+        if (this.comparisonScrollHandler) {
+            window.removeEventListener('wheel', this.comparisonScrollHandler);
+            this.comparisonScrollHandler = null;
+        }
+        
+        // Clear comparison planets array
+        this.comparisonPlanetsArray = null;
+
+        // Kill any ongoing camera animations
+        gsap.killTweensOf(this.sceneManager.camera.position);
+
+        // Clean up comparison group completely
+        if (this.comparisonGroup) {
+            this.comparisonGroup.traverse((child) => {
+                if (child.geometry) {
+                    child.geometry.dispose();
+                }
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => {
+                            if (m.map) m.map.dispose();
+                            m.dispose();
+                        });
+                    } else {
+                        if (child.material.map) child.material.map.dispose();
+                        child.material.dispose();
+                    }
+                }
+            });
+            this.sceneManager.scene.remove(this.comparisonGroup);
+            this.comparisonGroup = null;
+        }
+
+        // Remove exit tip
         const tip = document.getElementById('compare-exit-tip');
         if (tip) tip.remove();
 
-        // Restore logic happens in the caller usually (loadPlanet or toggleFlight)
-        // usage: uiManager calls toggleComparisonMode -> enter...
-        // if user clicks another planet, switchPlanet calls... wait.
+        // Restore previous planet
+        const restorePlanet = this.preCompareState?.planetName || 'earth';
+        
+        // Reset camera
+        this.sceneManager.camera.position.set(0, 5, 35);
+        this.sceneManager.camera.lookAt(0, 0, 0);
+        this.targetOrbitRadius = 35;
+        this.orbitRadius = 35;
 
-        // If we are just toggling back:
-        if (this.isFlightMode) {
-            this.systemPlanets.forEach(p => p.visible = true);
-            this.orbitLines.forEach(l => l.visible = true);
-            if (this.spaceship) this.spaceship.visible = true;
-            // Restore Flight HUD? Assumed managed by FlightController/UIManager
-        } else {
-            // Restore Orbit Mode
+        // Show UI
+        if (this.uiManager && this.uiManager.showUI) {
             this.uiManager.showUI();
-            this.switchPlanet(this.currentPlanetName);
         }
+
+        // Load the planet
+        this.loadPlanet(restorePlanet);
+        
+        // Clear stored state
+        this.preCompareState = null;
+        
+        console.log("✅ Exited comparison mode, restored to", restorePlanet);
     }
 
     handleKeyboardNavigation(e) {
