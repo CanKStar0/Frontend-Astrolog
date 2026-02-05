@@ -54,5 +54,12 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+    const url = `http://localhost:${PORT}`;
+    console.log('\n' + '='.repeat(50));
+    console.log('🚀 Server başarıyla başlatıldı!');
+    console.log('='.repeat(50));
+    console.log(`\n📍 Tarayıcınızda açın: \x1b[36m\x1b[4m${url}\x1b[0m\n`);
+    console.log(`Port: ${PORT}`);
+    console.log(`Durum: Aktif ✅`);
+    console.log('\n' + '='.repeat(50) + '\n');
 });

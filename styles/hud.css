@@ -206,6 +206,65 @@
     background: rgba(100, 200, 255, 0.2);
 }
 
+/* GitHub Button */
+#github-button {
+    right: 180px !important;
+    bottom: 40px !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    display: flex !important;
+    position: fixed !important;
+    overflow: visible;
+    transition: all 0.3s ease;
+    padding: 12px 20px !important;
+}
+
+#github-button:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 215, 0, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+}
+
+#github-button .hint-text {
+    font-size: 1.5em;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+}
+
+/* Shooting Star Animation */
+#github-button::before {
+    content: '⭐';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.8em;
+    opacity: 0;
+    animation: shootingStar 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes shootingStar {
+    0% {
+        opacity: 0;
+        transform: translate(40px, -40px) scale(0.5);
+    }
+    10% {
+        opacity: 1;
+    }
+    20% {
+        opacity: 0.8;
+        transform: translate(0, 0) scale(1);
+    }
+    30% {
+        opacity: 0;
+        transform: translate(-20px, 20px) scale(0.3);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-20px, 20px) scale(0.3);
+    }
+}
+
 #mode-hint {
     bottom: 40px;
 }
@@ -247,7 +306,12 @@
 }
 
 @media (max-width: 768px) {
-    .hud-hint {
+    .hud-hint:not(#github-button) {
         display: none;
+    }
+    
+    #github-button {
+        right: 20px !important;
+        bottom: 20px !important;
     }
 }
