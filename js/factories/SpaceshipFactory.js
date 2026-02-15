@@ -181,16 +181,15 @@ export class SpaceshipFactory {
         modelContainer.add(leftEng);
         modelContainer.add(rightEng);
 
-        // Glows
+        // Engine glow - single light instead of 3 for performance
         const createGlow = (pos) => {
-            const light = new THREE.PointLight(0x00aaff, 1, 4);
+            const light = new THREE.PointLight(0x00aaff, 1.5, 6);
             light.position.copy(pos);
             light.position.z += 0.5;
             return light;
         };
+        // Only one engine light for performance
         modelContainer.add(createGlow(centerEng.position));
-        modelContainer.add(createGlow(leftEng.position));
-        modelContainer.add(createGlow(rightEng.position));
 
 
         // CHECK FOR EXTERNAL MODEL

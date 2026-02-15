@@ -1,6 +1,6 @@
 
 export const EffectFactory = {
-    createStarField(count = 2000) {
+    createStarField(count = 1000) { // Reduced default from 2000
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
@@ -44,7 +44,7 @@ export const EffectFactory = {
         return starField;
     },
 
-    createWarpEffect(count = 1000) {
+    createWarpEffect(count = 500) { // Reduced from 1000
         // Warp Drive Effect: Lines radiating from center
         const geometry = new THREE.BufferGeometry();
         const positions = [];

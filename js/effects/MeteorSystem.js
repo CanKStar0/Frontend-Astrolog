@@ -135,7 +135,7 @@ export class MeteorSystem {
         meteorGroup.position.copy(position);
 
         // Core meteor mesh geometry and appearance
-        const geometry = new THREE.SphereGeometry(this.currentConfig.size, 16, 16);
+        const geometry = new THREE.SphereGeometry(this.currentConfig.size, 8, 8); // Reduced from 16
         const material = new THREE.MeshStandardMaterial({
             color: this.currentConfig.color,
             emissive: this.currentConfig.color,
@@ -148,7 +148,7 @@ export class MeteorSystem {
         meteorGroup.add(meteorMesh);
 
         // Glow effect
-        const glowGeometry = new THREE.SphereGeometry(this.currentConfig.size * 1.5, 16, 16);
+        const glowGeometry = new THREE.SphereGeometry(this.currentConfig.size * 1.5, 8, 8); // Reduced from 16
         const glowMaterial = new THREE.MeshBasicMaterial({
             color: this.currentConfig.glowColor,
             transparent: true,
@@ -189,8 +189,8 @@ export class MeteorSystem {
                 meteor.velocity.clone().multiplyScalar(deltaTime)
             );
 
-            // Create trail particles
-            if (Math.random() < 0.3) {
+            // Create trail particles - reduced frequency (from 0.3 to 0.15)
+            if (Math.random() < 0.15) {
                 this.particleSystem.createTrail(
                     meteor.mesh.position.clone(),
                     this.currentConfig.glowColor,
@@ -215,10 +215,10 @@ export class MeteorSystem {
     handleImpact(position) {
         console.log('Meteor impact at', position);
 
-        // Create explosion particles
+        // Create explosion particles - reduced count
         this.particleSystem.createExplosion(
             position,
-            150,
+            80, // Reduced from 150
             this.currentConfig.color,
             8
         );
@@ -230,10 +230,10 @@ export class MeteorSystem {
             this.currentConfig.glowColor
         );
 
-        // Create debris
+        // Create debris - reduced count
         this.particleSystem.createDebrisField(
             position,
-            30,
+            15, // Reduced from 30
             5
         );
 

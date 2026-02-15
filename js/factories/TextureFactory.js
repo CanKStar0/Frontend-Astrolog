@@ -1,37 +1,48 @@
 
+// Texture cache to prevent regenerating textures
+const _textureCache = new Map();
+
+function cachedTexture(key, generatorFn) {
+    if (_textureCache.has(key)) return _textureCache.get(key);
+    const tex = generatorFn();
+    _textureCache.set(key, tex);
+    return tex;
+}
+
 export const TextureFactory = {
     generateEarthTexture() {
+        return cachedTexture('earth', () => {
         const canvas = document.createElement('canvas');
-        canvas.width = 2048;
-        canvas.height = 1024;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
         // Deep ocean base
-        const oceanGradient = ctx.createLinearGradient(0, 0, 0, 1024);
+        const oceanGradient = ctx.createLinearGradient(0, 0, 0, 512);
         oceanGradient.addColorStop(0, '#1a3a5c');
         oceanGradient.addColorStop(0.3, '#1e5080');
         oceanGradient.addColorStop(0.5, '#2060a0');
         oceanGradient.addColorStop(0.7, '#1e5080');
         oceanGradient.addColorStop(1, '#1a3a5c');
         ctx.fillStyle = oceanGradient;
-        ctx.fillRect(0, 0, 2048, 1024);
+        ctx.fillRect(0, 0, 1024, 512);
 
         // Continents - more realistic shapes
         const continents = [
             // North America
-            { x: 300, y: 250, w: 350, h: 280, color: '#3a7d44' },
+            { x: 150, y: 125, w: 175, h: 140, color: '#3a7d44' },
             // South America
-            { x: 450, y: 500, w: 180, h: 350, color: '#4a8d54' },
+            { x: 225, y: 250, w: 90, h: 175, color: '#4a8d54' },
             // Europe
-            { x: 950, y: 200, w: 200, h: 150, color: '#4a8d54' },
+            { x: 475, y: 100, w: 100, h: 75, color: '#4a8d54' },
             // Africa
-            { x: 1000, y: 350, w: 250, h: 350, color: '#c4a35a' },
+            { x: 500, y: 175, w: 125, h: 175, color: '#c4a35a' },
             // Asia
-            { x: 1150, y: 180, w: 500, h: 350, color: '#5a9d64' },
+            { x: 575, y: 90, w: 250, h: 175, color: '#5a9d64' },
             // Australia
-            { x: 1550, y: 550, w: 200, h: 180, color: '#d4935a' },
+            { x: 775, y: 275, w: 100, h: 90, color: '#d4935a' },
             // Antarctica
-            { x: 0, y: 900, w: 2048, h: 124, color: '#e8e8f0' }
+            { x: 0, y: 450, w: 1024, h: 62, color: '#e8e8f0' }
         ];
 
         continents.forEach(c => {
@@ -61,7 +72,7 @@ export const TextureFactory = {
 
         // Mountain ranges
         ctx.fillStyle = '#8B7355';
-        [[1200, 280, 400], [350, 320, 200], [1100, 400, 150]].forEach(([x, y, len]) => {
+        [[600, 140, 200], [175, 160, 100], [550, 200, 75]].forEach(([x, y, len]) => {
             for (let i = 0; i < len; i += 10) {
                 ctx.beginPath();
                 ctx.arc(x + i + Math.random() * 20, y + Math.random() * 40, Math.random() * 15 + 5, 0, Math.PI * 2);
@@ -72,25 +83,27 @@ export const TextureFactory = {
         // Ice caps
         ctx.fillStyle = '#f0f5ff';
         ctx.beginPath();
-        ctx.ellipse(1024, 50, 800, 60, 0, 0, Math.PI * 2);
+        ctx.ellipse(512, 25, 400, 30, 0, 0, Math.PI * 2);
         ctx.fill();
 
         return new THREE.CanvasTexture(canvas);
+        }); // End cachedTexture
     },
 
     generateEarthClouds() {
+        return cachedTexture('earthClouds', () => {
         const canvas = document.createElement('canvas');
-        canvas.width = 2048;
-        canvas.height = 1024;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
-        ctx.clearRect(0, 0, 2048, 1024);
+        ctx.clearRect(0, 0, 1024, 512);
 
-        // Cloud patterns
-        for (let i = 0; i < 150; i++) {
-            const x = Math.random() * 2048;
-            const y = Math.random() * 1024;
-            const size = Math.random() * 150 + 30;
+        // Cloud patterns - reduced from 150 to 80
+        for (let i = 0; i < 80; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            const size = Math.random() * 80 + 15;
 
             const gradient = ctx.createRadialGradient(x, y, 0, x, y, size);
             gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
@@ -104,31 +117,33 @@ export const TextureFactory = {
         }
 
         return new THREE.CanvasTexture(canvas);
+        }); // End cachedTexture
     },
 
     generateMarsTexture() {
+        return cachedTexture('mars', () => {
         const canvas = document.createElement('canvas');
-        canvas.width = 2048;
-        canvas.height = 1024;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
         // Mars base color gradient
-        const baseGradient = ctx.createLinearGradient(0, 0, 0, 1024);
+        const baseGradient = ctx.createLinearGradient(0, 0, 0, 512);
         baseGradient.addColorStop(0, '#c1440e');
         baseGradient.addColorStop(0.3, '#d4652a');
         baseGradient.addColorStop(0.5, '#e07040');
         baseGradient.addColorStop(0.7, '#d4652a');
         baseGradient.addColorStop(1, '#a03808');
         ctx.fillStyle = baseGradient;
-        ctx.fillRect(0, 0, 2048, 1024);
+        ctx.fillRect(0, 0, 1024, 512);
 
         // Terrain variations - darker regions
         ctx.fillStyle = 'rgba(80, 30, 10, 0.4)';
         for (let i = 0; i < 40; i++) {
             ctx.beginPath();
-            const x = Math.random() * 2048;
-            const y = Math.random() * 1024;
-            ctx.ellipse(x, y, Math.random() * 200 + 50, Math.random() * 150 + 30, Math.random() * Math.PI, 0, Math.PI * 2);
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            ctx.ellipse(x, y, Math.random() * 100 + 25, Math.random() * 75 + 15, Math.random() * Math.PI, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -152,8 +167,8 @@ export const TextureFactory = {
 
         // Craters
         for (let i = 0; i < 60; i++) {
-            const x = Math.random() * 2048;
-            const y = Math.random() * 1024;
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
             const r = Math.random() * 30 + 5;
 
             ctx.fillStyle = 'rgba(60, 20, 5, 0.5)';
@@ -170,19 +185,20 @@ export const TextureFactory = {
         // Polar ice caps
         ctx.fillStyle = 'rgba(255, 250, 245, 0.8)';
         ctx.beginPath();
-        ctx.ellipse(1024, 30, 600, 40, 0, 0, Math.PI * 2);
+        ctx.ellipse(512, 15, 300, 20, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(1024, 994, 500, 35, 0, 0, Math.PI * 2);
+        ctx.ellipse(512, 497, 250, 18, 0, 0, Math.PI * 2);
         ctx.fill();
 
         return new THREE.CanvasTexture(canvas);
+        }); // End cachedTexture mars
     },
 
     generateJupiterTexture() {
         const canvas = document.createElement('canvas');
-        canvas.width = 2048;
-        canvas.height = 1024;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
         // Jupiter band colors
@@ -192,32 +208,29 @@ export const TextureFactory = {
             '#dcc4a0', '#c49860', '#e0d0b0', '#b88050', '#d4b890'
         ];
 
-        const bandHeight = 1024 / bands.length;
+        const bandHeight = 512 / bands.length;
 
         bands.forEach((color, i) => {
             // Create wavy band
             ctx.fillStyle = color;
-            // Calculate frequency so it loops perfectly over 2048 width
-            // 2048 * freq = n * 2 * PI
-            // freq = (n * 2 * PI) / 2048
             const waves = 10 + i; // Number of waves around the planet
-            const freq = (waves * Math.PI * 2) / 2048;
+            const freq = (waves * Math.PI * 2) / 1024;
 
             ctx.beginPath();
             ctx.moveTo(0, i * bandHeight);
 
             // Wavy top edge
-            for (let x = 0; x <= 2048; x += 10) {
-                const waveY = i * bandHeight + Math.sin(x * freq + i) * 8;
+            for (let x = 0; x <= 1024; x += 10) {
+                const waveY = i * bandHeight + Math.sin(x * freq + i) * 4;
                 ctx.lineTo(x, waveY);
             }
             // Ensure end point matches start point perfectly
-            ctx.lineTo(2048, i * bandHeight + Math.sin(0 + i) * 8);
+            ctx.lineTo(1024, i * bandHeight + Math.sin(0 + i) * 4);
 
             // Wavy bottom edge (draw backwards to close shape)
-            const nextFreq = ((waves + 1) * Math.PI * 2) / 2048;
-            for (let x = 2048; x >= 0; x -= 10) {
-                const waveY = (i + 1) * bandHeight + Math.sin(x * nextFreq + i + 1) * 8;
+            const nextFreq = ((waves + 1) * Math.PI * 2) / 1024;
+            for (let x = 1024; x >= 0; x -= 10) {
+                const waveY = (i + 1) * bandHeight + Math.sin(x * nextFreq + i + 1) * 4;
                 ctx.lineTo(x, waveY);
             }
 
@@ -229,10 +242,10 @@ export const TextureFactory = {
             for (let j = 0; j < 10; j++) {
                 ctx.beginPath();
                 ctx.ellipse(
-                    Math.random() * 2048,
+                    Math.random() * 1024,
                     i * bandHeight + Math.random() * bandHeight,
-                    Math.random() * 100 + 20,
-                    Math.random() * 20 + 5,
+                    Math.random() * 50 + 10,
+                    Math.random() * 10 + 3,
                     Math.random() * Math.PI,
                     0, Math.PI * 2
                 );
@@ -241,33 +254,33 @@ export const TextureFactory = {
         });
 
         // Great Red Spot
-        const grsX = 600;
-        const grsY = 580;
+        const grsX = 300;
+        const grsY = 290;
 
         // Outer red
         ctx.fillStyle = '#c45030';
         ctx.beginPath();
-        ctx.ellipse(grsX, grsY, 140, 80, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(grsX, grsY, 70, 40, -0.2, 0, Math.PI * 2);
         ctx.fill();
 
         // Inner swirl
         ctx.fillStyle = '#d86040';
         ctx.beginPath();
-        ctx.ellipse(grsX, grsY, 100, 55, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(grsX, grsY, 50, 28, -0.2, 0, Math.PI * 2);
         ctx.fill();
 
         // Eye
         ctx.fillStyle = '#e87050';
         ctx.beginPath();
-        ctx.ellipse(grsX, grsY, 50, 30, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(grsX, grsY, 25, 15, -0.2, 0, Math.PI * 2);
         ctx.fill();
 
         // Swirl lines
         ctx.strokeStyle = 'rgba(200, 100, 60, 0.5)';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         for (let i = 0; i < 5; i++) {
             ctx.beginPath();
-            ctx.arc(grsX, grsY, 60 + i * 20, 0, Math.PI * 1.5);
+            ctx.arc(grsX, grsY, 30 + i * 10, 0, Math.PI * 1.5);
             ctx.stroke();
         }
 
@@ -325,8 +338,8 @@ export const TextureFactory = {
 
     generateSaturnTexture() {
         const canvas = document.createElement('canvas');
-        canvas.width = 2048;
-        canvas.height = 1024;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
         // Saturn palette (Pale golds, beiges, muted yellows)
@@ -335,7 +348,7 @@ export const TextureFactory = {
             '#e0d8b8', '#cdc29c', '#c2b280', '#dcd4b0', '#e4dec0'
         ];
 
-        const bandHeight = 1024 / bands.length;
+        const bandHeight = 512 / bands.length;
 
         // Draw smooth bands
         bands.forEach((color, i) => {
@@ -345,12 +358,12 @@ export const TextureFactory = {
             gradient.addColorStop(1, color);
 
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, i * bandHeight, 2048, bandHeight);
+            ctx.fillRect(0, i * bandHeight, 1024, bandHeight);
 
             // Subtle noise
             ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.05})`;
             for (let j = 0; j < 100; j++) {
-                ctx.fillRect(Math.random() * 2048, i * bandHeight + Math.random() * bandHeight, Math.random() * 50, 2);
+                ctx.fillRect(Math.random() * 1024, i * bandHeight + Math.random() * bandHeight, Math.random() * 25, 1);
             }
         });
 
@@ -567,32 +580,32 @@ export const TextureFactory = {
 
     generateVenusTexture() {
         const canvas = document.createElement('canvas');
-        canvas.width = 2048;
-        canvas.height = 1024;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
         // Pale yellow/orange sulfuric acid clouds
-        const baseGradient = ctx.createLinearGradient(0, 0, 0, 1024);
+        const baseGradient = ctx.createLinearGradient(0, 0, 0, 512);
         baseGradient.addColorStop(0, '#e3bb76');
         baseGradient.addColorStop(0.5, '#f5d59c');
         baseGradient.addColorStop(1, '#e3bb76');
         ctx.fillStyle = baseGradient;
-        ctx.fillRect(0, 0, 2048, 1024);
+        ctx.fillRect(0, 0, 1024, 512);
 
         // Swirling cloud patterns
         for (let i = 0; i < 15; i++) {
-            const y = (i / 15) * 1024;
+            const y = (i / 15) * 512;
             ctx.fillStyle = i % 2 === 0 ? 'rgba(227, 187, 118, 0.4)' : 'rgba(245, 213, 156, 0.2)';
             ctx.beginPath();
             ctx.moveTo(0, y);
             const waves = 4;
-            const freq = (waves * Math.PI * 2) / 2048;
-            for (let x = 0; x <= 2048; x += 20) {
-                const waveY = y + Math.sin(x * freq + i) * 50;
+            const freq = (waves * Math.PI * 2) / 1024;
+            for (let x = 0; x <= 1024; x += 20) {
+                const waveY = y + Math.sin(x * freq + i) * 25;
                 ctx.lineTo(x, waveY);
             }
-            ctx.lineTo(2048, 1024);
-            ctx.lineTo(0, 1024);
+            ctx.lineTo(1024, 512);
+            ctx.lineTo(0, 512);
             ctx.closePath();
             ctx.fill();
         }
@@ -945,23 +958,23 @@ export const TextureFactory = {
     // Sun surface texture (fallback for simple rendering)
     generateSunTexture() {
         const canvas = document.createElement('canvas');
-        canvas.width = 2048;
-        canvas.height = 1024;
+        canvas.width = 1024;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
         // Base gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, 1024);
+        const gradient = ctx.createLinearGradient(0, 0, 0, 512);
         gradient.addColorStop(0, '#ffcc33');
         gradient.addColorStop(0.5, '#ffaa00');
         gradient.addColorStop(1, '#ff8800');
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 2048, 1024);
+        ctx.fillRect(0, 0, 1024, 512);
 
         // Granulation (convection cells)
-        for (let i = 0; i < 2000; i++) {
-            const x = Math.random() * 2048;
-            const y = Math.random() * 1024;
-            const size = Math.random() * 20 + 5;
+        for (let i = 0; i < 1000; i++) {
+            const x = Math.random() * 1024;
+            const y = Math.random() * 512;
+            const size = Math.random() * 10 + 3;
             const brightness = Math.random() * 40 - 20;
 
             const grad = ctx.createRadialGradient(x, y, 0, x, y, size);
@@ -975,9 +988,9 @@ export const TextureFactory = {
 
         // Sunspots
         for (let i = 0; i < 8; i++) {
-            const x = Math.random() * 2048;
-            const y = 300 + Math.random() * 400; // Equatorial region
-            const size = Math.random() * 40 + 10;
+            const x = Math.random() * 1024;
+            const y = 150 + Math.random() * 200; // Equatorial region
+            const size = Math.random() * 20 + 5;
 
             // Umbra (dark center)
             ctx.fillStyle = 'rgba(80, 40, 0, 0.7)';
@@ -994,11 +1007,11 @@ export const TextureFactory = {
 
         // Solar flares/prominences
         for (let i = 0; i < 5; i++) {
-            const x = Math.random() * 2048;
-            const y = Math.random() < 0.5 ? 50 : 974;
+            const x = Math.random() * 1024;
+            const y = Math.random() < 0.5 ? 25 : 487;
             ctx.fillStyle = 'rgba(255, 100, 50, 0.4)';
             ctx.beginPath();
-            ctx.ellipse(x, y, Math.random() * 100 + 30, Math.random() * 30 + 10, 0, 0, Math.PI * 2);
+            ctx.ellipse(x, y, Math.random() * 50 + 15, Math.random() * 15 + 5, 0, 0, Math.PI * 2);
             ctx.fill();
         }
 

@@ -6,7 +6,7 @@ export const PlanetFactory = {
 
     createAtmosphere(radius, color, opacity) {
         // Simple Glow (Restored)
-        const geometry = new THREE.SphereGeometry(radius * 1.2, 32, 32);
+        const geometry = new THREE.SphereGeometry(radius * 1.2, 24, 24); // Reduced from 32
         const material = new THREE.MeshBasicMaterial({
             color: color,
             transparent: true,
@@ -125,7 +125,7 @@ export const PlanetFactory = {
         const earthGroup = new THREE.Group();
 
         // Main sphere with texture
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const material = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateEarthTexture(),
             roughness: 0.8,
@@ -140,7 +140,7 @@ export const PlanetFactory = {
         earthGroup.add(earthMesh);
 
         // Cloud layer
-        const cloudGeometry = new THREE.SphereGeometry(spec.radius + 0.15, 64, 64);
+        const cloudGeometry = new THREE.SphereGeometry(spec.radius + 0.15, 40, 40); // Reduced from 64
         const cloudMaterial = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateEarthClouds(),
             transparent: true,
@@ -161,7 +161,7 @@ export const PlanetFactory = {
 
     createMercury(spec) {
         const mercuryGroup = new THREE.Group();
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const material = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateMercuryTexture(),
             roughness: 0.9,
@@ -177,7 +177,7 @@ export const PlanetFactory = {
 
     createVenus(spec) {
         const venusGroup = new THREE.Group();
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const material = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateVenusTexture(),
             roughness: 0.7,
@@ -196,7 +196,7 @@ export const PlanetFactory = {
 
     createUranus(spec) {
         const uranusGroup = new THREE.Group();
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const material = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateUranusTexture(),
             roughness: 0.6,
@@ -215,7 +215,7 @@ export const PlanetFactory = {
 
     createNeptune(spec) {
         const neptuneGroup = new THREE.Group();
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const material = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateNeptuneTexture(),
             roughness: 0.6,
@@ -235,7 +235,7 @@ export const PlanetFactory = {
     createMars(spec) {
         const marsGroup = new THREE.Group();
 
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const material = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateMarsTexture(),
             roughness: 0.9,
@@ -259,7 +259,7 @@ export const PlanetFactory = {
     createJupiter(spec) {
         const jupiterGroup = new THREE.Group();
 
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const texture = TextureFactory.generateJupiterTexture();
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
@@ -304,7 +304,7 @@ export const PlanetFactory = {
         blackHoleGroup.add(photonSphere);
 
         // Accretion disk
-        const diskGeometry = new THREE.RingGeometry(spec.radius * 0.8, spec.radius * 2.5, 128, 8);
+        const diskGeometry = new THREE.RingGeometry(spec.radius * 0.8, spec.radius * 2.5, 80, 6); // Reduced from 128, 8
         const diskMaterial = new THREE.MeshBasicMaterial({
             map: TextureFactory.generateAccretionDiskTexture(),
             side: THREE.DoubleSide,
@@ -364,7 +364,7 @@ export const PlanetFactory = {
         const saturnGroup = new THREE.Group();
 
         // 1. Planet Sphere
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         const texture = TextureFactory.generateSaturnTexture();
         texture.wrapS = THREE.RepeatWrapping;
 
@@ -380,7 +380,7 @@ export const PlanetFactory = {
         saturnGroup.add(saturnMesh);
 
         // 2. Rings
-        const ringGeometry = new THREE.RingGeometry(spec.radius * 1.4, spec.radius * 2.5, 128);
+        const ringGeometry = new THREE.RingGeometry(spec.radius * 1.4, spec.radius * 2.5, 80); // Reduced from 128
         const ringTexture = TextureFactory.generateRingTexture();
 
         const ringMaterial = new THREE.MeshStandardMaterial({
@@ -410,7 +410,7 @@ export const PlanetFactory = {
 
     createMoon(spec) {
         const moonGroup = new THREE.Group();
-        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48);
+        const geometry = new THREE.SphereGeometry(spec.radius, 32, 32); // Reduced from 48
         const material = new THREE.MeshStandardMaterial({
             map: TextureFactory.generateMoonTexture(),
             roughness: 0.9,
@@ -435,7 +435,7 @@ export const PlanetFactory = {
             return this.createArtificialObject(moonSpec, null, parentName);
         }
         const group = new THREE.Group();
-        const geometry = new THREE.SphereGeometry(moonSpec.radius, 32, 32);
+        const geometry = new THREE.SphereGeometry(moonSpec.radius, 24, 24); // Reduced from 32
 
         let texture = null;
         const n = moonSpec.name.toLowerCase();
@@ -559,7 +559,7 @@ export const PlanetFactory = {
         sunGroup.add(sunMesh);
 
         // 2. Glow
-        const glowGeometry = new THREE.SphereGeometry(spec.radius * 1.4, 32, 32);
+        const glowGeometry = new THREE.SphereGeometry(spec.radius * 1.4, 24, 24); // Reduced from 32
         const glowMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 glowColor: { value: new THREE.Color(0xffaa00) },
@@ -741,7 +741,7 @@ export const PlanetFactory = {
 
     createGenericPlanet(spec, planetName) {
         const group = new THREE.Group();
-        const geometry = new THREE.SphereGeometry(spec.radius, 64, 64);
+        const geometry = new THREE.SphereGeometry(spec.radius, 48, 48); // Reduced from 64
         
         // Get the appropriate texture based on planet/moon name
         let texture = null;

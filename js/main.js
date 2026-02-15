@@ -8,6 +8,7 @@ import { FlightController } from './systems/FlightController.js';
 import { planetSpecs } from './config/planets.js';
 import { EffectFactory } from './factories/EffectFactory.js';
 import { SoundManager } from './systems/SoundManager.js';
+import { performanceOptimizer } from './utils/PerformanceOptimizer.js';
 
 class CosmicApp {
     constructor() {
@@ -56,6 +57,9 @@ class CosmicApp {
         this.sceneManager = new SceneManager(canvas);
         this.meteorSystem = new MeteorSystem();
         this.soundManager = new SoundManager();
+        
+        // Initialize Performance Optimizer
+        this.perfOptimizer = performanceOptimizer;
 
         this.uiManager = new UIManager(
             (planetName) => {
@@ -69,11 +73,17 @@ class CosmicApp {
             () => this.soundManager.playClickSound()
         );
 
-        // Add Effects
-        const starField = EffectFactory.createStarField(1500);
+        // Add Effects - reduced star count (was 1500)
+        const starField = EffectFactory.createStarField(800);
         this.sceneManager.scene.add(starField);
 
-
+        // Init performance optimizer with renderer references
+        this.perfOptimizer.init(
+            this.sceneManager.renderer,
+            this.sceneManager.composer,
+            this.sceneManager.scene,
+            this.sceneManager.camera
+        );
 
         this.initInputListeners();
 
@@ -93,6 +103,10 @@ class CosmicApp {
                 } else {
                     this.toggleFlightMode();
                 }
+            }
+            // Toggle performance stats with P key
+            if (e.code === 'KeyP') {
+                this.perfOptimizer.toggleStats();
             }
             // Only allow keyboard navigation when not in flight or comparison mode
             if (!this.isFlightMode && !this.isComparisonMode) {
@@ -249,7 +263,7 @@ class CosmicApp {
     }
 
     createOrbitLine(radius) {
-        const geometry = new THREE.TorusGeometry(radius, 0.2, 16, 100);
+        const geometry = new THREE.TorusGeometry(radius, 0.15, 8, 64); // Reduced segments (was 16, 100)
         const material = new THREE.MeshBasicMaterial({
             color: 0x444444,
             transparent: true,
@@ -299,76 +313,9 @@ class CosmicApp {
         this.systemPlanets = [];
         this.orbitLines = [];
     }
-    animate() {
-        requestAnimationFrame(() => this.animate());
 
-        if (this.isComparisonMode) {
-            this.sceneManager.render();
-            return;
-        }
-
-        // Debug Execution Flow (Throttled)
-        if (Math.random() < 0.005) {
-            console.log(`Frame: FlightMode=${this.isFlightMode}, IsLanded=${this.isLanded}, SurfaceEnabled=${this.surfaceController?.enabled}`);
-        }
-
-        const time = performance.now() * 0.001;
-        const delta = this.clock ? this.clock.getDelta() : 0.016; // Fix clock usage if needed or define delta
-        // Main.js didn't have clock property visible in snippet, assuming it exists or using fixed delta for safety
-        // Wait, standard ThreeJS pattern uses Clock. Let's use 0.016 approx if not sure.
-
-        // ...
-
-        if (this.isFlightMode) {
-
-
-
-            // Flight Logic
-            if (this.flightController) this.flightController.update();
-
-            // ... (Planet rotation etc)
-
-            // Landing Check
-            let closestDist = Infinity;
-            let closestPlanet = null;
-
-            this.systemPlanets.forEach(planet => {
-                // ... (Update rotations) ...
-
-                const dist = this.spaceship.position.distanceTo(planet.position);
-                const surfaceDist = dist - planet.userData.spec.radius;
-
-                if (surfaceDist < closestDist) {
-                    closestDist = surfaceDist;
-                    closestPlanet = planet;
-                }
-            });
-
-            // Update HUD...
-
-            // Landing Trigger
-
-            // Debug Mars specifically
-            if (closestPlanet && closestPlanet.userData.name === 'mars') {
-                // Log occasionally to avoid spam but catch data
-                /*if (Math.random() < 0.05) { 
-                    console.log("Mars Debug - Surface Dist:", closestDist, "Raw Dist:", this.spaceship.position.distanceTo(closestPlanet.position), "Radius:", closestPlanet.userData.spec.radius);
-                }*/
-            }
-
-            if (closestPlanet) {
-                this.nearbyPlanet = closestPlanet;
-                // Landing prompt removed
-            } else {
-                this.nearbyPlanet = null;
-            }
-
-            // ... (Rest of flight loop)
-        }
-
-        // ... (Orbit logic)
-    }
-
+    // animate() is defined in the second declaration below
+    
     landOnPlanet() {
         if (!this.nearbyPlanet) return;
 
@@ -588,17 +535,7 @@ class CosmicApp {
 
     // --- SOLAR SYSTEM LOGIC ---
 
-    createOrbitLine(radius) {
-        const geometry = new THREE.TorusGeometry(radius, 0.2, 16, 100);
-        const material = new THREE.MeshBasicMaterial({
-            color: 0x444444,
-            transparent: true,
-            opacity: 0.3
-        });
-        const orbit = new THREE.Mesh(geometry, material);
-        orbit.rotation.x = Math.PI / 2;
-        return orbit;
-    }
+    // createOrbitLine is defined above, reusing first definition
 
     loadSolarSystem() {
         if (this.currentPlanet) {
@@ -657,9 +594,16 @@ class CosmicApp {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+        
+        // Performance tracking
+        this.perfOptimizer.beginFrame();
 
         const time = performance.now() * 0.001;
-        if (this.sceneManager.update) this.sceneManager.update(time);
+        
+        // Update stars only when optimizer says we should
+        if (this.perfOptimizer.shouldUpdate('stars')) {
+            if (this.sceneManager.update) this.sceneManager.update(time);
+        }
 
         if (this.isFlightMode && this.flightController) {
             this.flightController.update();
@@ -676,53 +620,62 @@ class CosmicApp {
                     planet.rotation.y += spec.rotationSpeed;
                 }
 
-                // Shader Update
-                if (planet.userData.update) {
+                // Shader Update - throttle during flight
+                if (planet.userData.update && this.perfOptimizer.shouldUpdate('particles')) {
                     planet.userData.update(time);
                 }
 
-                // Moon Orbit Animation
-                if (planet.children) {
+                // Moon Orbit Animation - throttle during flight
+                if (planet.children && this.perfOptimizer.shouldUpdate('moonOrbits')) {
                     planet.children.forEach(child => {
                         if (child.userData && child.userData.isMoon) {
-                            child.userData.angle += child.userData.orbitSpeed * 0.5; // Animate angle
+                            child.userData.angle += child.userData.orbitSpeed * 0.5;
                             child.position.x = Math.cos(child.userData.angle) * child.userData.distance;
                             child.position.z = Math.sin(child.userData.angle) * child.userData.distance;
                         }
                     });
                 }
 
-                // Distance Check
-                const dist = this.spaceship.position.distanceTo(planet.position);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closestPlanet = planet;
+                // Distance culling - hide very distant planets during flight
+                if (this.spaceship) {
+                    const dist = this.spaceship.position.distanceTo(planet.position);
+                    
+                    // Performance: Hide very distant planets during flight
+                    const renderDist = 1500;
+                    if (dist > renderDist) {
+                        planet.visible = false;
+                    } else {
+                        planet.visible = true;
+                    }
+                    
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestPlanet = planet;
+                    }
                 }
             });
 
-            // Update HUD
-            const speed = this.flightController.speed * 100; // Simulated km/h scale
-            const targetName = closestPlanet ? closestPlanet.userData.name : 'DEEP SPACE';
-            // Display Distance
-            const displayDist = Math.floor(closestDist * 1000); // Simulated km
-
-            this.uiManager.updateHUD(speed, targetName);
-
-            // Update Compass
-            this.uiManager.updateCompass(this.sceneManager.camera, this.systemPlanets);
-
-            // Interaction: Check if mouse is hovering a planet (Raycaster)
-            // But we want CLICK interaction. Raycasting every frame is expensive? No, it's fine for simple scene.
-            // Let's rely on global mouseDown event which we will add below.
+            // Update HUD - throttle to every 3rd frame
+            if (this.perfOptimizer.frameNumber % 3 === 0) {
+                const speed = this.flightController.speed * 100;
+                const targetName = closestPlanet ? closestPlanet.userData.name : 'DEEP SPACE';
+                this.uiManager.updateHUD(speed, targetName);
+                this.uiManager.updateCompass(this.sceneManager.camera, this.systemPlanets);
+            }
 
             this.targetInteractionPlanet = closestPlanet ? closestPlanet.userData.name : null;
 
-            // Still update scene managers like stars etc.
+            // Star rotation - cheaper operation, keep every frame
             const stars = this.sceneManager.scene.getObjectByName('stars');
             if (stars) stars.rotation.y += 0.0001;
 
-            this.meteorSystem.update(this.sceneManager.scene, this.spaceship);
-            this.sceneManager.render();
+            // Meteor system - throttle updates
+            if (this.perfOptimizer.shouldUpdate('meteors')) {
+                this.meteorSystem.update(this.sceneManager.scene, this.spaceship);
+            }
+            
+            // Use optimizer for rendering (handles bloom toggle)
+            this.perfOptimizer.render();
             return;
         }
 
@@ -765,7 +718,7 @@ class CosmicApp {
         }
 
         // this.meteorSystem.update(this.sceneManager.scene, this.currentPlanet, false);
-        this.sceneManager.render();
+        this.perfOptimizer.render(); // Use optimizer for rendering
     }
 
     playIntroCinematic() {
@@ -801,6 +754,10 @@ class CosmicApp {
 
         if (this.isFlightMode) {
             console.log("🚀 Entering Flight Mode: Full Solar System");
+            
+            // Activate 2x aggressive optimizations for flight
+            this.perfOptimizer.setFlightMode(true);
+            
             this.loadSolarSystem();
 
             if (!this.spaceship) {
@@ -829,6 +786,10 @@ class CosmicApp {
 
         } else {
             console.log("🛑 Exiting Flight Mode");
+            
+            // Deactivate flight mode optimizations
+            this.perfOptimizer.setFlightMode(false);
+            
             this.unloadSolarSystem();
             if (this.spaceship) this.spaceship.visible = false;
             document.body.style.cursor = 'default';

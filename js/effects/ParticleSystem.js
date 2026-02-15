@@ -26,7 +26,10 @@ export class ParticleSystem {
         
         // Particle pool for performance
         this.particlePool = [];
-        this.maxPoolSize = 5000;
+        this.maxPoolSize = 1000; // Reduced from 5000
+        
+        // Frame skip counter for throttled updates
+        this.frameCount = 0;
     }
     
     /**
@@ -48,7 +51,7 @@ export class ParticleSystem {
      * Create ambient space dust particles
      */
     createSpaceDust() {
-        const dustCount = 3000;
+        const dustCount = 1500; // Reduced from 3000 for performance
         const dustGeometry = new THREE.BufferGeometry();
         const dustPositions = new Float32Array(dustCount * 3);
         const dustSizes = new Float32Array(dustCount);
@@ -139,7 +142,7 @@ export class ParticleSystem {
      * @param {number} color - Particle color
      * @param {number} speed - Explosion speed
      */
-    createExplosion(position, count = 100, color = 0xffaa44, speed = 5) {
+    createExplosion(position, count = 50, color = 0xffaa44, speed = 5) { // Reduced default from 100
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(count * 3);
         const velocities = new Float32Array(count * 3);
@@ -317,7 +320,7 @@ export class ParticleSystem {
      * @param {number} count
      * @param {number} radius
      */
-    createDebrisField(position, count = 50, radius = 10) {
+    createDebrisField(position, count = 25, radius = 10) { // Reduced from 50
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(count * 3);
         const velocities = new Float32Array(count * 3);
@@ -377,9 +380,10 @@ export class ParticleSystem {
      */
     update() {
         const deltaTime = 0.016; // Approximate 60fps
+        this.frameCount++;
         
-        // Update space dust
-        if (this.spaceDust) {
+        // Update space dust every 2nd frame for performance
+        if (this.spaceDust && (this.frameCount % 2 === 0)) {
             this.updateSpaceDust();
         }
         

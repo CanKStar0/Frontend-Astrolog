@@ -25,13 +25,20 @@ export class SceneManager {
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
-            antialias: true,
-            alpha: true
+            antialias: window.devicePixelRatio <= 1, // Only antialias on low-DPI screens
+            alpha: false, // Disable alpha for performance (space is black anyway)
+            powerPreference: 'high-performance',
+            stencil: false, // Not needed
+            depth: true
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Cap at 1.5 instead of 2
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.2;
+        
+        // Performance: Limit shadow map if used
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.BasicShadowMap; // Cheapest shadow type
 
         this.setupLights();
         this.createStarfield();
@@ -56,7 +63,7 @@ export class SceneManager {
 
     createStarfield() {
         const starsGeometry = new THREE.BufferGeometry();
-        const starCount = 10000;
+        const starCount = 5000; // Reduced from 10000 for performance
         const positions = new Float32Array(starCount * 3);
         const sizes = new Float32Array(starCount);
         const randoms = new Float32Array(starCount); // For twinkle offset
@@ -162,16 +169,25 @@ export class SceneManager {
         // Post Processing
         const renderScene = new THREE.RenderPass(this.scene, this.camera);
 
+        // Bloom at half resolution for performance
+        const bloomResolution = new THREE.Vector2(
+            Math.floor(window.innerWidth * 0.5),
+            Math.floor(window.innerHeight * 0.5)
+        );
+        
         const bloomPass = new THREE.UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1.5, // Strength (Glow intensity)
-            0.4, // Radius
+            bloomResolution,
+            1.2, // Strength (slightly reduced)
+            0.3, // Radius
             0.85 // Threshold
         );
 
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(renderScene);
         this.composer.addPass(bloomPass);
+        
+        // Store bloom pass reference for optimizer
+        this.bloomPass = bloomPass;
     }
 
     render() {
